@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onslaught: Vertical Tower Defense</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="hint">L-click slot: Place Hero &nbsp;|&nbsp; R-click empty slot: Build Tower (50g) &nbsp;|&nbsp; R-click tower: Upgrade (75-200g)</div>
+    <div id="ui-overlay">
+        <div id="wave-display">Wave: 1</div>
+        <div id="score-display">Score: 0</div>
+        <div id="gold-display"><span class="icon">🪙</span> 100</div>
+        <div id="lives-display"><span class="icon">♥</span> 20</div>
+        <div id="flash-msg"></div>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
