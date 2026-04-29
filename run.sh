@@ -1,6 +1,9 @@
 #!/bin/bash
 echo "Starting Onslaught at http://localhost:5000"
 
+# Kill anything already holding port 5000
+fuser -k 5000/tcp 2>/dev/null && sleep 0.3
+
 python3 -m http.server 5000 --directory "/home/samsung1466/Python/onslaught_game/" &
 SERVER_PID=$!
 
