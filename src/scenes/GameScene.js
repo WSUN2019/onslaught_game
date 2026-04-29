@@ -460,11 +460,11 @@ export default class GameScene extends Phaser.Scene {
             sky.fillRect(sx - 0.5, sy - 9, 1, 18);
         });
 
-        // Wispy clouds
+        // Wispy clouds (rows of overlapping circles)
         sky.fillStyle(0x0d2040, 0.22);
-        sky.fillEllipse(210, 290, 310, 34);
-        sky.fillEllipse(620, 332, 250, 26);
-        sky.fillEllipse(970, 272, 210, 22);
+        [-60,-30,0,30,60,90,120].forEach(dx => sky.fillCircle(210+dx, 290, 20));
+        [-50,-20,10,40,70,100].forEach(dx => sky.fillCircle(620+dx, 332, 16));
+        [-40,-10,20,50,80].forEach(dx => sky.fillCircle(970+dx, 272, 14));
 
         // ── Mountain ranges ──────────────────────────────────────────────
         const mtn = this.add.graphics();
@@ -665,12 +665,17 @@ export default class GameScene extends Phaser.Scene {
             cobble.fillRect(lx, y - topH / 2, lw, 2);
         });
 
-        // Helper: stroke a bezier curve on `cobble`
-        const bez = (width, color, alpha, p0x, p0y, c1x, c1y, c2x, c2y, p3x, p3y) => {
+        // Phaser Graphics has no bezierCurveTo — sample the cubic manually
+        const bez = (width, color, alpha, p0x, p0y, c1x, c1y, c2x, c2y, p3x, p3y, steps = 28) => {
             cobble.lineStyle(width, color, alpha);
             cobble.beginPath();
             cobble.moveTo(p0x, p0y);
-            cobble.bezierCurveTo(c1x, c1y, c2x, c2y, p3x, p3y);
+            for (let i = 1; i <= steps; i++) {
+                const t = i / steps, mt = 1 - t;
+                const x = mt*mt*mt*p0x + 3*mt*mt*t*c1x + 3*mt*t*t*c2x + t*t*t*p3x;
+                const y = mt*mt*mt*p0y + 3*mt*mt*t*c1y + 3*mt*t*t*c2y + t*t*t*p3y;
+                cobble.lineTo(x, y);
+            }
             cobble.strokePath();
         };
 
