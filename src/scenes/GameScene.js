@@ -270,6 +270,32 @@ export default class GameScene extends Phaser.Scene {
             this._checkWaveComplete();
         });
 
+        // Pause overlay text (drawn last so it sits on top)
+        this.pauseText = this.add.text(540, 480, 'PAUSED', {
+            fontSize: '72px',
+            fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+            fontStyle: 'bold',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 8,
+            alpha: 0.95,
+        }).setOrigin(0.5).setVisible(false).setDepth(100);
+
+        this.paused = false;
+        this.input.keyboard.on('keydown-SPACE', () => {
+            if (this.gameOver) return;
+            this.paused = !this.paused;
+            if (this.paused) {
+                this.physics.pause();
+                this.time.paused = true;
+                this.pauseText.setVisible(true);
+            } else {
+                this.physics.resume();
+                this.time.paused = false;
+                this.pauseText.setVisible(false);
+            }
+        });
+
         // Kick off wave 1
         this._startWave();
     }
@@ -545,6 +571,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update(time) {
+        if (this.paused || this.gameOver) return;
         this.hero.update(time);
         this.towers.getChildren().forEach(tower => tower.update(time));
     }
