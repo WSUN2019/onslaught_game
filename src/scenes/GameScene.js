@@ -263,8 +263,9 @@ export default class GameScene extends Phaser.Scene {
             this.monstersAlive--;
             if (this.lives === 0) {
                 this.gameOver = true;
-                this.ui.flashMessage(`GAME OVER — Score: ${this.score.toLocaleString()}`, 99999);
                 this.time.removeAllEvents();
+                this.physics.pause();
+                this._showGameOver();
                 return;
             }
             this._checkWaveComplete();
@@ -568,6 +569,49 @@ export default class GameScene extends Phaser.Scene {
         this.time.delayedCall(5000, () => {
             if (!this.gameOver) this._startWave();
         });
+    }
+
+    _showGameOver() {
+        const W = 1080, H = 960;
+
+        // Dark overlay
+        const overlay = this.add.graphics().setDepth(200);
+        overlay.fillStyle(0x000000, 0);
+        overlay.fillRect(0, 0, W, H);
+        this.tweens.add({ targets: overlay, alpha: 0, fillAlpha: 0.72, duration: 800 });
+
+        // "GAME OVER"
+        const title = this.add.text(W / 2, H / 2 - 80, 'GAME OVER', {
+            fontSize: '96px',
+            fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+            fontStyle: 'bold',
+            color: '#cc2222',
+            stroke: '#000000',
+            strokeThickness: 10,
+        }).setOrigin(0.5).setAlpha(0).setDepth(201);
+
+        // "You Died."
+        const sub = this.add.text(W / 2, H / 2 + 20, 'You Died.', {
+            fontSize: '52px',
+            fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+            fontStyle: 'italic',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 6,
+        }).setOrigin(0.5).setAlpha(0).setDepth(201);
+
+        // Score line
+        const scoreLine = this.add.text(W / 2, H / 2 + 100, `Wave ${this.wave}  •  Score: ${this.score.toLocaleString()}`, {
+            fontSize: '32px',
+            fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+            color: '#ffdd44',
+            stroke: '#000000',
+            strokeThickness: 5,
+        }).setOrigin(0.5).setAlpha(0).setDepth(201);
+
+        this.tweens.add({ targets: title,     alpha: 1, duration: 600, delay: 400, ease: 'Power2' });
+        this.tweens.add({ targets: sub,       alpha: 1, duration: 600, delay: 700, ease: 'Power2' });
+        this.tweens.add({ targets: scoreLine, alpha: 1, duration: 600, delay: 1000, ease: 'Power2' });
     }
 
     update(time) {
