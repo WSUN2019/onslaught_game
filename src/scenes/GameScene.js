@@ -665,46 +665,59 @@ export default class GameScene extends Phaser.Scene {
             cobble.fillRect(lx, y - topH / 2, lw, 2);
         });
 
-        // ── Right connector ramp (x≈930, bottom ledge → middle ledge) ────
-        const rcX = 888, rcW = 84;
-        const rcTop = Math.round(500 + topH / 2);
-        const rcBot = Math.round(850 - topH / 2);
-        cobbleRect(rcX, rcTop, rcW, rcBot - rcTop, 22, 13);
-        // Step lines for staircase feel
-        cobble.fillStyle(0x38280a, 0.55);
-        for (let sy = rcTop + 14; sy < rcBot; sy += 14) cobble.fillRect(rcX, sy, rcW, 2);
-        // Mountain-side retaining wall
-        cobble.fillStyle(0x1c1c2e);
-        cobble.fillRect(rcX - 14, rcTop, 14, rcBot - rcTop);
-        cobble.fillStyle(0x2c2c42);
-        cobble.fillRect(rcX - 14, rcTop, 14, 4);
-        cobble.fillStyle(0x12121e);
-        for (let wy = rcTop + 16; wy < rcBot; wy += 16) cobble.fillRect(rcX - 14, wy, 14, 1);
-        // Outer edge highlight (cliff drop)
-        cobble.fillStyle(0x5a4820, 0.55);
-        cobble.fillRect(rcX + rcW, rcTop, 3, rcBot - rcTop);
-        cobble.fillStyle(0x000000, 0.4);
-        cobble.fillRect(rcX + rcW + 3, rcTop, 6, rcBot - rcTop);
+        // Helper: stroke a bezier curve on `cobble`
+        const bez = (width, color, alpha, p0x, p0y, c1x, c1y, c2x, c2y, p3x, p3y) => {
+            cobble.lineStyle(width, color, alpha);
+            cobble.beginPath();
+            cobble.moveTo(p0x, p0y);
+            cobble.bezierCurveTo(c1x, c1y, c2x, c2y, p3x, p3y);
+            cobble.strokePath();
+        };
 
-        // ── Left connector ramp (x≈150, middle ledge → top ledge) ────────
-        const lcX = 108, lcW = 84;
-        const lcTop = Math.round(150 + topH / 2);
-        const lcBot = Math.round(500 - topH / 2);
-        cobbleRect(lcX, lcTop, lcW, lcBot - lcTop, 22, 13);
-        cobble.fillStyle(0x38280a, 0.55);
-        for (let sy = lcTop + 14; sy < lcBot; sy += 14) cobble.fillRect(lcX, sy, lcW, 2);
-        // Mountain-side retaining wall (right side of left ramp)
-        cobble.fillStyle(0x1c1c2e);
-        cobble.fillRect(lcX + lcW, lcTop, 14, lcBot - lcTop);
-        cobble.fillStyle(0x2c2c42);
-        cobble.fillRect(lcX + lcW, lcTop, 14, 4);
-        cobble.fillStyle(0x12121e);
-        for (let wy = lcTop + 16; wy < lcBot; wy += 16) cobble.fillRect(lcX + lcW, wy, 14, 1);
-        // Outer edge
-        cobble.fillStyle(0x5a4820, 0.55);
-        cobble.fillRect(lcX - 3, lcTop, 3, lcBot - lcTop);
-        cobble.fillStyle(0x000000, 0.4);
-        cobble.fillRect(lcX - 9, lcTop, 6, lcBot - lcTop);
+        // ── Right connector — U-curve bulging RIGHT ───────────────────────
+        // Center bezier: (930,rcBot) → C1=(1030,rcBot) → C2=(1030,rcTop) → (930,rcTop)
+        // Edges offset ±38px in x on each control point for parallel approximation
+        const rcTop = Math.round(500 + topH / 2);   // 513
+        const rcBot = Math.round(850 - topH / 2);   // 837
+        const rcCX = 1030;   // control-point x (sets bulge distance)
+
+        // Drop shadow (cliff-drop side, right)
+        bez(18, 0x000000, 0.45,  968, rcBot, rcCX+38, rcBot, rcCX+38, rcTop,  968, rcTop);
+        // Dark mortar base
+        bez(84, 0x1c1408, 1,     930, rcBot, rcCX,    rcBot, rcCX,    rcTop,  930, rcTop);
+        // Stone surface
+        bez(74, 0x7a6240, 1,     930, rcBot, rcCX,    rcBot, rcCX,    rcTop,  930, rcTop);
+        // Worn centre highlight
+        bez(22, 0x8c7452, 0.38,  930, rcBot, rcCX,    rcBot, rcCX,    rcTop,  930, rcTop);
+        // Inner edge line (left / mountain side)
+        bez(3,  0x1c1408, 0.9,   892, rcBot, rcCX-38, rcBot, rcCX-38, rcTop,  892, rcTop);
+        // Outer edge line (right / cliff side)
+        bez(3,  0x1c1408, 0.9,   968, rcBot, rcCX+38, rcBot, rcCX+38, rcTop,  968, rcTop);
+        // Retaining wall (mountain side, slightly left of inner edge)
+        bez(16, 0x1e1e30, 1,     878, rcBot, rcCX-52, rcBot, rcCX-52, rcTop,  878, rcTop);
+        bez(12, 0x28283e, 1,     878, rcBot, rcCX-52, rcBot, rcCX-52, rcTop,  878, rcTop);
+
+        // ── Left connector — U-curve bulging LEFT ─────────────────────────
+        // Center bezier: (150,lcBot) → C1=(50,lcBot) → C2=(50,lcTop) → (150,lcTop)
+        const lcTop = Math.round(150 + topH / 2);   // 163
+        const lcBot = Math.round(500 - topH / 2);   // 487
+        const lcCX = 50;    // control-point x
+
+        // Drop shadow (cliff-drop side, left)
+        bez(18, 0x000000, 0.45,  112, lcBot, lcCX-38, lcBot, lcCX-38, lcTop,  112, lcTop);
+        // Dark mortar base
+        bez(84, 0x1c1408, 1,     150, lcBot, lcCX,    lcBot, lcCX,    lcTop,  150, lcTop);
+        // Stone surface
+        bez(74, 0x7a6240, 1,     150, lcBot, lcCX,    lcBot, lcCX,    lcTop,  150, lcTop);
+        // Worn centre highlight
+        bez(22, 0x8c7452, 0.38,  150, lcBot, lcCX,    lcBot, lcCX,    lcTop,  150, lcTop);
+        // Inner edge line (right / mountain side)
+        bez(3,  0x1c1408, 0.9,   188, lcBot, lcCX+38, lcBot, lcCX+38, lcTop,  188, lcTop);
+        // Outer edge line (left / cliff side)
+        bez(3,  0x1c1408, 0.9,   112, lcBot, lcCX-38, lcBot, lcCX-38, lcTop,  112, lcTop);
+        // Retaining wall (mountain side, slightly right of inner edge)
+        bez(16, 0x1e1e30, 1,     202, lcBot, lcCX+52, lcBot, lcCX+52, lcTop,  202, lcTop);
+        bez(12, 0x28283e, 1,     202, lcBot, lcCX+52, lcBot, lcCX+52, lcTop,  202, lcTop);
 
         // ── Wall torches along each ledge ────────────────────────────────
         const torch = this.add.graphics();
