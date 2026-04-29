@@ -12,4 +12,7 @@ xdg-open "http://localhost:5000" 2>/dev/null \
   || firefox "http://localhost:5000" 2>/dev/null \
   || echo "Could not detect a browser — open http://localhost:5000 manually"
 
-wait $SERVER_PID
+echo "Server running. Press Enter to stop."
+read
+kill $SERVER_PID
+echo "Server stopped."
