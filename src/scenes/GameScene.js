@@ -153,6 +153,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create() {
+        this.cameras.main.fadeIn(400, 0, 0, 0);
+
         this.gold = 100;
         this.lives = 20;
         this.path = MapManager.getPathPoints();
@@ -609,9 +611,37 @@ export default class GameScene extends Phaser.Scene {
             strokeThickness: 5,
         }).setOrigin(0.5).setAlpha(0).setDepth(201);
 
-        this.tweens.add({ targets: title,     alpha: 1, duration: 600, delay: 400, ease: 'Power2' });
-        this.tweens.add({ targets: sub,       alpha: 1, duration: 600, delay: 700, ease: 'Power2' });
-        this.tweens.add({ targets: scoreLine, alpha: 1, duration: 600, delay: 1000, ease: 'Power2' });
+        // "Press SPACE to return" — appears after score, blinks
+        const returnPrompt = this.add.text(W / 2, H / 2 + 180, 'Press  SPACE  to return to menu', {
+            fontSize: '30px',
+            fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+            fontStyle: 'bold',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 5,
+        }).setOrigin(0.5).setAlpha(0).setDepth(201);
+
+        this.tweens.add({ targets: title,        alpha: 1, duration: 600, delay: 400,  ease: 'Power2' });
+        this.tweens.add({ targets: sub,          alpha: 1, duration: 600, delay: 700,  ease: 'Power2' });
+        this.tweens.add({ targets: scoreLine,    alpha: 1, duration: 600, delay: 1000, ease: 'Power2' });
+        this.tweens.add({
+            targets: returnPrompt, alpha: 1, duration: 600, delay: 1400, ease: 'Power2',
+            onComplete: () => {
+                this.tweens.add({
+                    targets: returnPrompt, alpha: 0.1,
+                    duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+                });
+            }
+        });
+
+        // Re-bind space to go back to splash (override the pause listener)
+        this.input.keyboard.removeAllListeners('keydown-SPACE');
+        this.input.keyboard.once('keydown-SPACE', () => {
+            this.cameras.main.fadeOut(400, 0, 0, 0);
+            this.cameras.main.once('camerafadeoutcomplete', () => {
+                this.scene.start('SplashScene');
+            });
+        });
     }
 
     update(time) {
