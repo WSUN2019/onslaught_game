@@ -299,6 +299,23 @@ export default class GameScene extends Phaser.Scene {
             }
         });
 
+        // Speed toggle — F key or button click
+        this.speedMult = 1;
+        const speedBtn = document.getElementById('speed-btn');
+        const toggleSpeed = () => {
+            if (this.gameOver) return;
+            this.speedMult = this.speedMult === 1 ? 2 : 1;
+            const fast = this.speedMult === 2;
+            this.physics.world.timeScale = fast ? 0.5 : 1; // inverse for arcade physics
+            this.time.timeScale = fast ? 2 : 1;
+            speedBtn.textContent = fast ? '▶▶ 2x' : '▶ 1x';
+            speedBtn.classList.toggle('fast', fast);
+        };
+        this.input.keyboard.on('keydown-F', toggleSpeed);
+        speedBtn.addEventListener('click', toggleSpeed);
+        // Clean up listener when scene shuts down
+        this.events.once('shutdown', () => speedBtn.removeEventListener('click', toggleSpeed));
+
         // Kick off wave 1
         this._startWave();
     }
@@ -635,6 +652,12 @@ export default class GameScene extends Phaser.Scene {
         });
 
         // Re-bind space to go back to splash (override the pause listener)
+        // Reset speed
+        this.physics.world.timeScale = 1;
+        this.time.timeScale = 1;
+        const speedBtn = document.getElementById('speed-btn');
+        if (speedBtn) { speedBtn.textContent = '▶ 1x'; speedBtn.classList.remove('fast'); }
+
         this.input.keyboard.removeAllListeners('keydown-SPACE');
         this.input.keyboard.once('keydown-SPACE', () => {
             this.cameras.main.fadeOut(400, 0, 0, 0);
