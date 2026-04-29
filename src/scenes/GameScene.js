@@ -426,101 +426,321 @@ export default class GameScene extends Phaser.Scene {
 
     drawBackground() {
         const W = 1080, H = 960;
-        const bg = this.add.graphics();
 
-        bg.fillGradientStyle(0x06061a, 0x06061a, 0x0d1a38, 0x0d1a38, 1);
-        bg.fillRect(0, 0, W, H);
+        // ── Sky ──────────────────────────────────────────────────────────
+        const sky = this.add.graphics();
+        sky.fillGradientStyle(0x010510, 0x010510, 0x081630, 0x081630, 1);
+        sky.fillRect(0, 0, W, H);
 
-        // Moon
-        bg.fillStyle(0xf8f0cc, 1);
-        bg.fillCircle(860, 80, 48);
-        bg.fillStyle(0xe0d8b8, 1);
-        bg.fillCircle(848, 72, 8);
-        bg.fillCircle(872, 94, 5);
-        bg.fillCircle(854, 100, 6);
-        bg.fillStyle(0xf8f0cc, 0.06);
-        bg.fillCircle(860, 80, 88);
-        bg.fillStyle(0xf8f0cc, 0.03);
-        bg.fillCircle(860, 80, 120);
+        // Moon with layered glow
+        sky.fillStyle(0xfaf2d8);
+        sky.fillCircle(870, 88, 54);
+        sky.fillStyle(0xe8e0c2);
+        sky.fillCircle(856, 76, 10);
+        sky.fillCircle(884, 100, 7);
+        sky.fillCircle(860, 104, 8);
+        [80, 106, 138, 176].forEach(r => { sky.fillStyle(0xfaf2d8, 0.04); sky.fillCircle(870, 88, r); });
 
         // Stars
-        bg.fillStyle(0xffffff, 1);
+        sky.fillStyle(0xffffff);
         [
-            [55,45,2],[190,28,1.5],[330,62,2],[460,22,1],[575,52,2],
-            [695,32,1.5],[800,18,1],[960,58,2],[1030,28,1.5],[105,138,1.5],
-            [245,108,2],[395,148,1],[510,122,1.5],[665,92,2],[720,152,1],
-            [1005,122,1.5],[35,208,1.5],[165,188,1],[475,202,2],[645,218,1.5],
-            [915,188,1],[1045,198,2],[285,238,1.5],[775,228,1],[140,92,1],
-        ].forEach(([sx, sy, sr]) => bg.fillCircle(sx, sy, sr));
+            [55,45,2.2],[190,28,1.5],[330,62,2.0],[460,22,1.2],[575,52,2.0],
+            [695,32,1.5],[800,18,1.2],[960,58,2.0],[1030,28,1.5],[105,138,1.5],
+            [245,108,2.0],[395,148,1.2],[510,122,1.5],[665,92,2.0],[720,152,1.2],
+            [35,208,1.5],[165,188,1.2],[475,202,2.0],[645,218,1.5],[915,188,1.2],
+            [285,238,1.5],[775,228,1.2],[140,92,1.2],[1005,122,1.5],[1045,198,2.0],
+            [420,78,1.2],[88,175,1.0],[600,168,1.0],[350,195,1.0],[68,305,1.2],
+            [450,288,1.0],[810,272,1.5],[1060,310,1.0],[220,328,1.2],[540,258,1.0],
+        ].forEach(([sx, sy, sr]) => sky.fillCircle(sx, sy, sr));
 
-        // Far mountains
-        bg.fillStyle(0x12203a);
-        bg.fillTriangle(0,460, 140,270, 310,460);
-        bg.fillTriangle(220,460, 410,235, 600,460);
-        bg.fillTriangle(500,460, 700,195, 890,460);
-        bg.fillTriangle(760,460, 970,255, 1080,460);
-        bg.fillRect(0, 460, W, H - 460);
+        // Cross-flare on brightest stars
+        [[330,62],[665,92],[475,202],[810,272]].forEach(([sx, sy]) => {
+            sky.fillStyle(0xffffff, 0.22);
+            sky.fillRect(sx - 9, sy - 0.5, 18, 1);
+            sky.fillRect(sx - 0.5, sy - 9, 1, 18);
+        });
 
-        // Mid mountains
-        bg.fillStyle(0x0e1828);
-        bg.fillTriangle(0,590, 190,420, 400,590);
-        bg.fillTriangle(310,590, 540,385, 760,590);
-        bg.fillTriangle(660,590, 900,440, 1080,590);
-        bg.fillRect(0, 590, W, H - 590);
+        // Wispy clouds
+        sky.fillStyle(0x0d2040, 0.22);
+        sky.fillEllipse(210, 290, 310, 34);
+        sky.fillEllipse(620, 332, 250, 26);
+        sky.fillEllipse(970, 272, 210, 22);
+
+        // ── Mountain ranges ──────────────────────────────────────────────
+        const mtn = this.add.graphics();
+
+        // Far peaks
+        mtn.fillStyle(0x0d1e36);
+        mtn.fillTriangle(0, 520, 190, 298, 400, 520);
+        mtn.fillTriangle(290, 520, 502, 262, 714, 520);
+        mtn.fillTriangle(592, 520, 802, 236, 994, 520);
+        mtn.fillTriangle(872, 520, 1080, 322, 1080, 520);
+        mtn.fillRect(0, 518, W, 4);
+
+        // Snow caps
+        mtn.fillStyle(0xddeef8, 0.52);
+        mtn.fillTriangle(176, 326, 190, 298, 204, 326);
+        mtn.fillTriangle(488, 288, 502, 262, 516, 288);
+        mtn.fillTriangle(788, 260, 802, 236, 816, 260);
+        mtn.fillStyle(0xc8daf0, 0.28);
+        mtn.fillTriangle(190, 318, 200, 298, 216, 322);
+
+        // Ridge edge highlights
+        mtn.lineStyle(1, 0x1a3a60, 0.4);
+        mtn.lineBetween(0, 520, 190, 298);
+        mtn.lineBetween(290, 520, 502, 262);
+        mtn.lineBetween(592, 520, 802, 236);
+
+        // Mid range
+        mtn.fillStyle(0x091424);
+        mtn.fillTriangle(0, 680, 240, 468, 500, 680);
+        mtn.fillTriangle(410, 680, 660, 432, 910, 680);
+        mtn.fillTriangle(800, 680, 1052, 486, 1080, 680);
+        mtn.fillRect(0, 658, W, 24);
 
         // Close mountain base
-        bg.fillStyle(0x0a1020);
-        bg.fillTriangle(0,760, 280,580, 530,760);
-        bg.fillTriangle(440,760, 730,545, 980,760);
-        bg.fillTriangle(880,760, 1080,650, 1080,760);
-        bg.fillRect(0, 760, W, H - 760);
+        mtn.fillStyle(0x060c1a);
+        mtn.fillTriangle(0, 860, 340, 596, 652, 860);
+        mtn.fillTriangle(558, 860, 852, 564, 1080, 860);
+        mtn.fillRect(0, 840, W, H - 840);
 
-        // Rocky ledge platforms
+        // Atmosphere / fog bands
+        mtn.fillStyle(0x0e1e34, 0.18);
+        mtn.fillRect(0, 538, W, 68);
+        mtn.fillStyle(0x0a1628, 0.13);
+        mtn.fillRect(0, 648, W, 58);
+        mtn.fillStyle(0x060e1c, 0.1);
+        mtn.fillRect(0, 756, W, 60);
+
+        // ── Rocky ledge platforms ────────────────────────────────────────
         for (const y of MapManager.getLedgeYValues()) {
-            this._drawRockyLedge(bg, y);
+            this._drawRockyLedge(mtn, y);
         }
 
-        // Mountain trail path
-        const pathGfx = this.add.graphics();
-        pathGfx.lineStyle(12, 0x5a3a18, 0.85);
-        pathGfx.beginPath();
-        pathGfx.moveTo(this.path[0].x, this.path[0].y);
-        for (let i = 1; i < this.path.length; i++) {
-            pathGfx.lineTo(this.path[i].x, this.path[i].y);
-        }
-        pathGfx.strokePath();
-        pathGfx.lineStyle(4, 0x8a6030, 0.5);
-        pathGfx.beginPath();
-        pathGfx.moveTo(this.path[0].x, this.path[0].y);
-        for (let i = 1; i < this.path.length; i++) {
-            pathGfx.lineTo(this.path[i].x, this.path[i].y);
-        }
-        pathGfx.strokePath();
+        // ── Cobblestone path + torches ───────────────────────────────────
+        this._drawCobblePath();
+
+        // ── Edge vignette ────────────────────────────────────────────────
+        const vig = this.add.graphics();
+        vig.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.42, 0, 0.42, 0);
+        vig.fillRect(0, 0, 100, H);
+        vig.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0.42, 0, 0.42);
+        vig.fillRect(W - 100, 0, 100, H);
+        vig.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.28, 0.28, 0, 0);
+        vig.fillRect(0, 0, W, 80);
     }
 
     _drawRockyLedge(g, y) {
-        const x = 80, w = 920, h = 34;
-        g.fillStyle(0x38384a);
-        g.fillRect(x, y - h / 2, w, h);
-        g.fillStyle(0x50506a);
-        g.fillRect(x, y - h / 2, w, 8);
-        g.fillStyle(0x50506a);
-        for (let i = 0; i < 9; i++) {
-            g.fillRect(x + 10 + i * 100, y - h / 2 - 7, 62, 9);
+        const lx = 75, lw = 930;
+        const topH = 26;    // top surface thickness
+        const faceH = 60;   // cliff face height below top surface
+
+        // ── Cliff face (front vertical surface) ──────────────────────────
+        g.fillStyle(0x1c1c2c);
+        g.fillRect(lx, y + topH / 2, lw, faceH);
+
+        // Upper band — ambient sky bounce
+        g.fillStyle(0x272740);
+        g.fillRect(lx, y + topH / 2, lw, Math.round(faceH * 0.36));
+
+        // Horizontal mortar courses
+        const courseH = 17;
+        g.fillStyle(0x121220);
+        for (let fy = y + topH / 2 + courseH; fy < y + topH / 2 + faceH; fy += courseH) {
+            g.fillRect(lx, Math.round(fy), lw, 2);
         }
-        g.fillStyle(0x40404e);
-        for (let i = 0; i < 8; i++) {
-            g.fillRect(x + 65 + i * 100, y - h / 2 - 4, 30, 6);
+
+        // Vertical block joints — alternating offset per course
+        const bW = 70;
+        g.fillStyle(0x121220);
+        for (let course = 0; course * courseH < faceH; course++) {
+            const fy = y + topH / 2 + course * courseH;
+            const off = (course % 2 === 0) ? 0 : bW / 2;
+            for (let fx = lx + off; fx < lx + lw; fx += bW) {
+                g.fillRect(Math.round(fx), Math.round(fy), 2, courseH);
+            }
         }
-        g.fillStyle(0x22222e);
-        for (let bx = x + 90; bx < x + w; bx += 100) {
-            g.fillRect(bx, y - h / 2, 3, h);
+
+        // Top-left highlight on each face block (3D sheen)
+        g.fillStyle(0x2e2e48, 0.45);
+        for (let course = 0; course < 2; course++) {
+            const fy = y + topH / 2 + course * courseH + 2;
+            const off = (course % 2 === 0) ? 0 : bW / 2;
+            for (let fx = lx + off + 2; fx < lx + lw; fx += bW) {
+                g.fillRect(Math.round(fx), Math.round(fy), bW - 6, 4);
+            }
         }
-        g.fillRect(x, y, w, 2);
-        g.fillStyle(0x606075);
-        g.fillRect(x, y - h / 2, 4, h);
-        g.fillStyle(0x08080f);
-        g.fillRect(x, y + h / 2, w, 10);
+
+        // Diagonal crack veins
+        g.fillStyle(0x0a0a16);
+        [[160,8,10,26],[338,12,14,32],[518,6,12,24],[698,10,9,22],[878,14,16,36]].forEach(([cx, cy1, dx, len]) => {
+            for (let i = 0; i < len; i += 2) {
+                g.fillRect(lx + cx + Math.round(i * dx / len), y + topH / 2 + cy1 + i, 1, 2);
+            }
+        });
+
+        // ── Top surface ───────────────────────────────────────────────────
+        g.fillStyle(0x34344c);
+        g.fillRect(lx, y - topH / 2, lw, topH);
+
+        // Surface stones — irregular widths for natural look
+        let sx2 = lx + 4;
+        [42,36,48,38,44,40,46,36,42,44,38,46,40,42,36,48,38,44,42,40].forEach((sw, i) => {
+            g.fillStyle((i % 3 === 0) ? 0x3c3c54 : (i % 3 === 1) ? 0x393952 : 0x414150);
+            g.fillRect(sx2, y - topH / 2 + 4, sw - 2, topH - 8);
+            sx2 += sw;
+        });
+
+        // Moonlight highlight on very top edge
+        g.fillStyle(0x545470);
+        g.fillRect(lx, y - topH / 2, lw, 4);
+        g.fillStyle(0x484862, 0.4);
+        g.fillRect(lx, y - topH / 2 + 4, lw, 2);
+
+        // Inner shadow where top meets cliff face
+        g.fillStyle(0x08081a, 0.7);
+        g.fillRect(lx, y + topH / 2 - 5, lw, 6);
+
+        // ── Drop shadow below cliff ───────────────────────────────────────
+        g.fillStyle(0x000000, 0.62);
+        g.fillRect(lx, y + topH / 2 + faceH, lw, 14);
+        g.fillStyle(0x000000, 0.24);
+        g.fillRect(lx, y + topH / 2 + faceH + 14, lw, 8);
+
+        // ── Moss tufts at cliff base ──────────────────────────────────────
+        g.fillStyle(0x163018, 0.65);
+        [128, 298, 472, 642, 814].forEach(mx => {
+            g.fillRect(lx + mx, y + topH / 2 + faceH - 10, 38, 12);
+            g.fillRect(lx + mx + 8, y + topH / 2 + faceH - 17, 20, 8);
+            g.fillRect(lx + mx + 13, y + topH / 2 + faceH - 22, 10, 6);
+        });
+
+        // Fallen rubble at cliff base
+        g.fillStyle(0x1a1a28);
+        [88, 218, 388, 552, 718, 888].forEach(rx => {
+            g.fillRect(lx + rx, y + topH / 2 + faceH + 10, 16, 7);
+            g.fillRect(lx + rx + 20, y + topH / 2 + faceH + 13, 9, 5);
+        });
+    }
+
+    _drawCobblePath() {
+        const lx = 75, lw = 930;
+        const topH = 26, faceH = 60;
+        const cobble = this.add.graphics();
+
+        // Helper: fill area with 3D cobblestone brick pattern
+        const cobbleRect = (rx, ry, rw, rh, sW = 28, sH = 14) => {
+            cobble.fillStyle(0x22160a);
+            cobble.fillRect(rx, ry, rw, rh);
+            let row = 0;
+            for (let cy = ry + 2; cy + sH <= ry + rh - 2; cy += sH + 2) {
+                const off = (row % 2) * Math.round(sW / 2 + 1);
+                for (let cx = rx + 2 - off; cx < rx + rw - 2; cx += sW + 2) {
+                    const bx = Math.max(cx, rx + 2);
+                    const bw = Math.min(cx + sW, rx + rw - 2) - bx;
+                    if (bw < 4) continue;
+                    cobble.fillStyle(0x7a6240);      // stone base
+                    cobble.fillRect(bx, cy, bw, sH);
+                    cobble.fillStyle(0x8c7250);      // top highlight
+                    cobble.fillRect(bx, cy, bw, 3);
+                    cobble.fillRect(bx, cy, 2, sH);
+                    cobble.fillStyle(0x584430);      // bottom shadow
+                    cobble.fillRect(bx, cy + sH - 3, bw, 3);
+                    cobble.fillRect(bx + bw - 2, cy, 2, sH);
+                    cobble.fillStyle(0x6a5438, 0.3); // worn centre
+                    cobble.fillRect(bx + 3, cy + 3, bw - 6, sH - 6);
+                }
+                row++;
+            }
+        };
+
+        // ── Ledge top cobblestone surfaces ───────────────────────────────
+        MapManager.getLedgeYValues().forEach(y => {
+            cobbleRect(lx, y - topH / 2, lw, topH, 34, 12);
+            // Raised front lip
+            cobble.fillStyle(0x3a2a0e);
+            cobble.fillRect(lx, y + topH / 2 - 4, lw, 5);
+            // Rear highlight
+            cobble.fillStyle(0x6a5840, 0.35);
+            cobble.fillRect(lx, y - topH / 2, lw, 2);
+        });
+
+        // ── Right connector ramp (x≈930, bottom ledge → middle ledge) ────
+        const rcX = 888, rcW = 84;
+        const rcTop = Math.round(500 + topH / 2);
+        const rcBot = Math.round(850 - topH / 2);
+        cobbleRect(rcX, rcTop, rcW, rcBot - rcTop, 22, 13);
+        // Step lines for staircase feel
+        cobble.fillStyle(0x38280a, 0.55);
+        for (let sy = rcTop + 14; sy < rcBot; sy += 14) cobble.fillRect(rcX, sy, rcW, 2);
+        // Mountain-side retaining wall
+        cobble.fillStyle(0x1c1c2e);
+        cobble.fillRect(rcX - 14, rcTop, 14, rcBot - rcTop);
+        cobble.fillStyle(0x2c2c42);
+        cobble.fillRect(rcX - 14, rcTop, 14, 4);
+        cobble.fillStyle(0x12121e);
+        for (let wy = rcTop + 16; wy < rcBot; wy += 16) cobble.fillRect(rcX - 14, wy, 14, 1);
+        // Outer edge highlight (cliff drop)
+        cobble.fillStyle(0x5a4820, 0.55);
+        cobble.fillRect(rcX + rcW, rcTop, 3, rcBot - rcTop);
+        cobble.fillStyle(0x000000, 0.4);
+        cobble.fillRect(rcX + rcW + 3, rcTop, 6, rcBot - rcTop);
+
+        // ── Left connector ramp (x≈150, middle ledge → top ledge) ────────
+        const lcX = 108, lcW = 84;
+        const lcTop = Math.round(150 + topH / 2);
+        const lcBot = Math.round(500 - topH / 2);
+        cobbleRect(lcX, lcTop, lcW, lcBot - lcTop, 22, 13);
+        cobble.fillStyle(0x38280a, 0.55);
+        for (let sy = lcTop + 14; sy < lcBot; sy += 14) cobble.fillRect(lcX, sy, lcW, 2);
+        // Mountain-side retaining wall (right side of left ramp)
+        cobble.fillStyle(0x1c1c2e);
+        cobble.fillRect(lcX + lcW, lcTop, 14, lcBot - lcTop);
+        cobble.fillStyle(0x2c2c42);
+        cobble.fillRect(lcX + lcW, lcTop, 14, 4);
+        cobble.fillStyle(0x12121e);
+        for (let wy = lcTop + 16; wy < lcBot; wy += 16) cobble.fillRect(lcX + lcW, wy, 14, 1);
+        // Outer edge
+        cobble.fillStyle(0x5a4820, 0.55);
+        cobble.fillRect(lcX - 3, lcTop, 3, lcBot - lcTop);
+        cobble.fillStyle(0x000000, 0.4);
+        cobble.fillRect(lcX - 9, lcTop, 6, lcBot - lcTop);
+
+        // ── Wall torches along each ledge ────────────────────────────────
+        const torch = this.add.graphics();
+        const torchAt = (tx, ty) => {
+            // Warm glow halos
+            torch.fillStyle(0xff7700, 0.06); torch.fillCircle(tx, ty - 34, 72);
+            torch.fillStyle(0xff5500, 0.07); torch.fillCircle(tx, ty - 34, 42);
+            torch.fillStyle(0xff9900, 0.04); torch.fillCircle(tx, ty - 34, 100);
+            // Pole
+            torch.fillStyle(0x4a2e0a);
+            torch.fillRect(tx - 3, ty - 40, 6, 28);
+            // Bracket arm
+            torch.fillStyle(0x3a2008);
+            torch.fillRect(tx - 9, ty - 42, 20, 5);
+            torch.fillRect(tx + 9, ty - 50, 3, 10);
+            // Bracket detail
+            torch.fillStyle(0x2a1404);
+            torch.fillRect(tx - 8, ty - 42, 2, 5);
+            torch.fillRect(tx + 16, ty - 50, 2, 10);
+            // Flame — outer orange
+            torch.fillStyle(0xcc4400, 0.95);
+            torch.fillTriangle(tx - 7, ty - 50, tx + 7, ty - 50, tx, ty - 66);
+            // Flame — mid amber
+            torch.fillStyle(0xff7700, 0.9);
+            torch.fillTriangle(tx - 5, ty - 50, tx + 5, ty - 50, tx + 1, ty - 64);
+            // Flame — inner yellow
+            torch.fillStyle(0xffcc00, 0.85);
+            torch.fillTriangle(tx - 3, ty - 50, tx + 3, ty - 50, tx, ty - 60);
+            // Flame core
+            torch.fillStyle(0xffffff, 0.45); torch.fillCircle(tx, ty - 56, 3);
+        };
+
+        // Torches between slot positions (at x=205, 410, 665, 865 per ledge)
+        [850, 500, 150].forEach(y => {
+            [200, 415, 668, 862].forEach(x => torchAt(x, y));
+        });
     }
 
     _waveConfig(wave) {
