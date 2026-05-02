@@ -1,5 +1,9 @@
 import music from '../audio/MusicManager.js';
 
+// SplashScene: the title screen shown before the game starts.
+// Draws a fully procedural dark-fantasy background (sky, moon, stars, mountains,
+// ground) using Phaser Graphics, then shows game instructions and waits for SPACE.
+// Music starts here so it's already playing when GameScene fades in.
 export default class SplashScene extends Phaser.Scene {
     constructor() {
         super('SplashScene');
@@ -12,22 +16,22 @@ export default class SplashScene extends Phaser.Scene {
         const W = 1080, H = 960;
         const g = this.add.graphics();
 
-        // Sky gradient
+        // ── Sky gradient (dark blue-black at top → slightly lighter at bottom) ──
         g.fillGradientStyle(0x06061a, 0x06061a, 0x0d1a38, 0x0d1a38, 1);
         g.fillRect(0, 0, W, H);
 
-        // Moon
+        // ── Moon with craters and two layers of soft glow halo ───────────────
         g.fillStyle(0xf8f0cc);
         g.fillCircle(860, 100, 58);
-        g.fillStyle(0xe0d8b8);
+        g.fillStyle(0xe0d8b8); // darker crater circles
         g.fillCircle(846, 90, 10);
         g.fillCircle(874, 116, 7);
-        g.fillStyle(0xf8f0cc, 0.06);
+        g.fillStyle(0xf8f0cc, 0.06); // inner glow ring
         g.fillCircle(860, 100, 100);
-        g.fillStyle(0xf8f0cc, 0.03);
+        g.fillStyle(0xf8f0cc, 0.03); // outer glow ring
         g.fillCircle(860, 100, 140);
 
-        // Stars
+        // ── Stars — array of [x, y, radius] ──────────────────────────────────
         g.fillStyle(0xffffff);
         [
             [55,45,2],[190,28,1.5],[330,62,2],[460,22,1],[575,52,2],
@@ -37,6 +41,7 @@ export default class SplashScene extends Phaser.Scene {
             [285,238,1.5],[775,228,1],[140,92,1],[1005,122,1.5],[1045,198,2],
         ].forEach(([x, y, r]) => g.fillCircle(x, y, r));
 
+        // ── Three layers of mountain silhouettes (far, mid, close) ───────────
         // Far mountains
         g.fillStyle(0x12203a);
         g.fillTriangle(0,620, 160,390, 360,620);
@@ -55,7 +60,7 @@ export default class SplashScene extends Phaser.Scene {
         g.fillStyle(0x0a1020);
         g.fillRect(0, 820, W, H - 820);
 
-        // ── Title ────────────────────────────────────────────────────────
+        // ── Title text ────────────────────────────────────────────────────────
         this.add.text(W / 2, 200, 'ONSLAUGHT', {
             fontSize: '110px',
             fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
@@ -74,7 +79,7 @@ export default class SplashScene extends Phaser.Scene {
             strokeThickness: 5,
         }).setOrigin(0.5);
 
-        // ── How to play ──────────────────────────────────────────────────
+        // ── How-to-play instructions ──────────────────────────────────────────
         const instructions = [
             '🪙  Earn gold by killing monsters',
             '♥  Lose a heart when a monster escapes',
@@ -103,7 +108,7 @@ export default class SplashScene extends Phaser.Scene {
             }).setOrigin(0.5);
         });
 
-        // ── Press SPACE prompt (blinking) ────────────────────────────────
+        // ── "Press SPACE" prompt — blinks using a yoyo alpha tween ───────────
         const prompt = this.add.text(W / 2, 820, 'Press  SPACE  to begin', {
             fontSize: '40px',
             fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
@@ -122,7 +127,7 @@ export default class SplashScene extends Phaser.Scene {
             ease: 'Sine.easeInOut',
         });
 
-        // ── Wave info footer ─────────────────────────────────────────────
+        // ── Footer hint ───────────────────────────────────────────────────────
         this.add.text(W / 2, 900, 'Survive as many waves as you can — each wave grows stronger', {
             fontSize: '20px',
             fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
@@ -131,7 +136,7 @@ export default class SplashScene extends Phaser.Scene {
             strokeThickness: 3,
         }).setOrigin(0.5);
 
-        // Start on SPACE
+        // ── SPACE → fade to black → start GameScene ───────────────────────────
         this.input.keyboard.once('keydown-SPACE', () => {
             this.cameras.main.fadeOut(400, 0, 0, 0);
             this.cameras.main.once('camerafadeoutcomplete', () => {

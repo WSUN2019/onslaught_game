@@ -1,9 +1,11 @@
+/* Global reset — consistent box model across all elements */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Page body: dark background, centred canvas, no scrollbar */
 body {
     background-color: #0a0a0a;
     display: flex;
@@ -13,6 +15,8 @@ body {
     overflow: hidden;
 }
 
+/* Fixed 1080×960 wrapper. Phaser injects its <canvas> as the first child.
+   All HTML overlay elements use position:absolute relative to this container. */
 #game-container {
     position: relative;
     width: 1080px;
@@ -23,6 +27,8 @@ body {
 }
 
 /* ── Stat row (top) ───────────────────────────────────────────── */
+/* Horizontal row of stat boxes anchored to the top-left.
+   pointer-events:none lets clicks pass through to the Phaser canvas. */
 #ui-overlay {
     position: absolute;
     top: 20px;
@@ -36,7 +42,9 @@ body {
     z-index: 10;
 }
 
-/* ── Ancient stone plaque — shared style ──────────────────────── */
+/* ── Ancient stone plaque — shared visual style ───────────────── */
+/* Used by stat boxes AND buttons. Simulates an engraved stone tile:
+   dark earthy gradient + bevelled border + multi-layer box-shadow. */
 .stone {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 20px;
@@ -47,13 +55,14 @@ body {
     background: linear-gradient(175deg, #2e2b18 0%, #1a190e 50%, #24220f 100%);
     border-style: solid;
     border-width: 2px;
+    /* Four-value shorthand: top right bottom left — simulates lit from top-left */
     border-color: #7a6a2a #2a2210 #1a1408 #6a5a22;
     border-radius: 3px;
     box-shadow:
-        inset 1px 2px 3px rgba(255,230,100,0.07),
-        inset 0 -3px 6px rgba(0,0,0,0.70),
-        4px 5px 14px rgba(0,0,0,0.85),
-        0 0 0 1px rgba(0,0,0,0.55);
+        inset 1px 2px 3px rgba(255,230,100,0.07),  /* inner top highlight */
+        inset 0 -3px 6px rgba(0,0,0,0.70),          /* inner bottom shadow */
+        4px 5px 14px rgba(0,0,0,0.85),               /* drop shadow */
+        0 0 0 1px rgba(0,0,0,0.55);                  /* outer edge ring */
 }
 
 /* ── Stat boxes — all identical size ──────────────────────────── */
@@ -67,13 +76,15 @@ body {
     line-height: 1;
 }
 
-/* colour-only overrides */
+/* Per-stat colour overrides so each box is instantly readable at a glance */
 #wave-display  { color: #88ccff; }
 #score-display { color: #ffd84a; }
 #gold-display  { color: #ffcc22; }
 #lives-display { color: #ff5555; }
 
 /* ── Flash message ────────────────────────────────────────────── */
+/* Appears below the stat row. Starts invisible (opacity:0) and is made
+   visible by UIManager.flashMessage(), then fades back via CSS transition. */
 #flash-msg {
     position: absolute;
     top: 70px;
@@ -91,6 +102,8 @@ body {
 }
 
 /* ── Button group — top-right of game canvas ──────────────────── */
+/* Contains the speed toggle (▶ 1x / ▶▶ 2x) and mute button.
+   pointer-events:all overrides the parent overlay's none. */
 #btn-group {
     position: absolute;
     top: 20px;
@@ -115,23 +128,93 @@ body {
     transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
+/* Hover: slightly lighter stone surface */
 #speed-btn:hover,
 #mute-btn:hover {
     background: linear-gradient(175deg, #3c3820 0%, #28260e 50%, #302e10 100%);
     border-color: #aa9040 #3a3010 #2a2008 #9a8030;
 }
 
+/* .fast class is toggled by GameScene when 2× speed is active */
 #speed-btn.fast {
     border-color: #cc8820 #4a2e08 #2a1804 #aa6c14;
     color: #ff9900;
 }
 
+/* .muted class dims the mute button when music is off */
 #mute-btn.muted {
     border-color: #555544 #1a1a12 #111108 #444434;
     color: #666655;
 }
 
+/* ── Tower selection menu (bottom-right) ─────────────────────── */
+/* Row of three circular buttons; .active-tower highlights the selected type. */
+#tower-menu {
+    position: absolute;
+    bottom: 32px;
+    right: 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    z-index: 10;
+    pointer-events: all;
+}
+
+.tower-btn {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    padding: 4px 2px;
+    pointer-events: all;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.tower-btn:hover {
+    background: linear-gradient(175deg, #3c3820 0%, #28260e 50%, #302e10 100%);
+    border-color: #aa9040 #3a3010 #2a2008 #9a8030;
+    border-radius: 50%;
+}
+
+/* Gold border glow on the active/selected tower type */
+.tower-btn.active-tower {
+    border-color: #ffcc22 #aa8800 #886600 #eeaa00;
+    box-shadow:
+        inset 1px 2px 3px rgba(255,220,80,0.18),
+        inset 0 -3px 6px rgba(0,0,0,0.70),
+        4px 5px 14px rgba(0,0,0,0.85),
+        0 0 0 1px rgba(0,0,0,0.55);
+}
+
+/* Tower button label parts — stacked vertically inside each circle button */
+.ttype-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.ttype-name {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    color: #e8d080;
+    line-height: 1;
+}
+
+.ttype-cost {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 12px;
+    color: #ffcc22;
+    line-height: 1;
+}
+
 /* ── Hint bar — bottom of game canvas ────────────────────────── */
+/* Static control reminder across the very bottom edge. pointer-events:none
+   keeps it from blocking clicks on the Phaser canvas. */
 #hint {
     position: absolute;
     bottom: 0;

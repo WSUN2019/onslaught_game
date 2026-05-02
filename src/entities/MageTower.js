@@ -1,21 +1,21 @@
 import Projectile from './Projectile.js';
 
 // LEVELS[1..5]: stat progression per upgrade tier.
-// Damage and range grow each level; fireRate drops (faster); shots unlocks multi-target at Lv3.
+// Damage and range grow steadily; fireRate drops (faster); shots unlocks multi-target at Lv3.
 // null at index 0 keeps level numbers 1-based.
 const LEVELS = [
     null,
-    { damage: 10, fireRate: 800, range: 300, shots: 1, tint: 0xffffff, upgradeCost: 8  },
-    { damage: 16, fireRate: 680, range: 323, shots: 1, tint: 0xaaffaa, upgradeCost: 10 },
-    { damage: 25, fireRate: 540, range: 345, shots: 2, tint: 0x88aaff, upgradeCost: 15 },
-    { damage: 38, fireRate: 400, range: 372, shots: 2, tint: 0xffdd44, upgradeCost: 20 },
-    { damage: 55, fireRate: 280, range: 402, shots: 2, tint: 0xff6644, upgradeCost: null }, // max level
+    { damage: 100, fireRate: 4000, range: 600, shots: 1, tint: 0xffffff, upgradeCost: 8  },
+    { damage: 160, fireRate: 3400, range: 646, shots: 1, tint: 0xcc88ff, upgradeCost: 10 },
+    { damage: 250, fireRate: 2700, range: 690, shots: 2, tint: 0xaa44ff, upgradeCost: 15 },
+    { damage: 380, fireRate: 2000, range: 744, shots: 2, tint: 0x8822ff, upgradeCost: 20 },
+    { damage: 550, fireRate: 1400, range: 804, shots: 2, tint: 0x6600ff, upgradeCost: null }, // max level
 ];
 
-// Tower (Archer): the basic ranged tower. Lower damage and shorter range than
-// MageTower but cheaper and faster at higher levels.
-// At Lv3+ it fires at two targets per volley.
-export default class Tower extends Phaser.GameObjects.Container {
+// MageTower: a high-damage, long-range tower that fires large purple projectiles.
+// Has the longest range of all towers but a slow fire rate at low levels.
+// At Lv3+ it can hit two targets per volley.
+export default class MageTower extends Phaser.GameObjects.Container {
     constructor(scene, x, y) {
         super(scene, x, y);
 
@@ -24,10 +24,10 @@ export default class Tower extends Phaser.GameObjects.Container {
 
         this.nextFire = 0; // scene time (ms) when the tower may fire again
 
-        this.sprite = scene.add.image(0, -18, 'tower_tex');
-        this.icon   = scene.add.image(0, -105, 'archer_icon_tex');
+        this.sprite = scene.add.image(0, -18, 'mage_tex');
+        this.icon   = scene.add.image(0, -105, 'mage_icon_tex');
         this.label  = scene.add.text(0, -72, 'Lv.1', {
-            fontSize: '22px', color: '#ffffff',
+            fontSize: '22px', color: '#cc88ff',
             fontStyle: 'bold', stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
@@ -60,7 +60,7 @@ export default class Tower extends Phaser.GameObjects.Container {
 
         // Float an upgrade label that fades upward
         const txt = scene.add.text(this.x, this.y - 110, `UPGRADED! Lv.${this.towerLevel}`, {
-            fontSize: '28px', color: '#ffdd44',
+            fontSize: '28px', color: '#aa44ff',
             fontStyle: 'bold', stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5).setDepth(100);
         scene.tweens.add({
@@ -100,10 +100,12 @@ export default class Tower extends Phaser.GameObjects.Container {
         return targets;
     }
 
-    // Spawns a projectile aimed at target and adds it to the scene group.
+    // Spawns a large purple projectile aimed at target and adds it to the scene group.
     fire(target) {
         const p = new Projectile(this.scene, this.x, this.y, target);
         p.damage = this.damage;
+        p.setTint(0xaa44ff);
+        p.setScale(1.8); // visually larger than archer shots
         this.scene.projectiles.add(p);
     }
 }

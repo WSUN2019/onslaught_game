@@ -5,23 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Onslaught: Vertical Tower Defense</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Phaser 3 loaded from CDN — no build step needed -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 <body>
+    <!--
+        #game-container is the fixed 1080×960 canvas wrapper.
+        All HTML UI elements overlay it at z-index 10+.
+        Phaser renders into a <canvas> that Phaser injects as the first child.
+    -->
     <div id="game-container">
+
+        <!-- Top-left stat row: wave counter, score, gold, lives -->
         <div id="ui-overlay">
             <div id="wave-display"  class="stat-box stone">⚔ Wave: 1</div>
             <div id="score-display" class="stat-box stone">Score: 0</div>
             <div id="gold-display"  class="stat-box stone">🪙 25</div>
             <div id="lives-display" class="stat-box stone">♥ 20</div>
         </div>
+
+        <!-- Temporary message bar — fades out after each flash (GameScene.flashMessage) -->
         <div id="flash-msg"></div>
+
+        <!-- Top-right controls: speed toggle (F key) and music mute -->
         <div id="btn-group">
             <button id="speed-btn" class="stone" title="Press F to toggle">▶ 1x</button>
             <button id="mute-btn"  class="stone" title="Mute / unmute music">🔊</button>
         </div>
-        <div id="hint">L-click slot: Place Hero &nbsp;|&nbsp; R-click empty slot: Build Tower (5g) &nbsp;|&nbsp; R-click tower: Upgrade (8-20g)</div>
+
+        <!-- Bottom-right tower type selector — sets which tower is built on right-click -->
+        <div id="tower-menu">
+            <button id="btn-archer" class="tower-btn stone active-tower" title="Archer Tower — fires projectiles at enemies">
+                <span class="ttype-icon">🏹</span>
+                <span class="ttype-name">Archer</span>
+                <span class="ttype-cost">5g</span>
+            </button>
+            <button id="btn-knight" class="tower-btn stone" title="Knight Gate — captures &amp; defeats one monster at a time">
+                <span class="ttype-icon">⚔</span>
+                <span class="ttype-name">Gate</span>
+                <span class="ttype-cost">5g</span>
+            </button>
+            <button id="btn-mage" class="tower-btn stone" title="Mage Tower — slow but devastating arcane blasts">
+                <span class="ttype-icon">🔮</span>
+                <span class="ttype-name">Mage</span>
+                <span class="ttype-cost">5g</span>
+            </button>
+        </div>
+
+        <!-- Bottom hint bar — static instructions for new players -->
+        <div id="hint">L-click slot: Place Hero &nbsp;|&nbsp; Select tower type below-left, then R-click slot to build (5g)</div>
     </div>
+
+    <!-- ES module entry point — boots Phaser and registers both scenes -->
     <script type="module" src="main.js"></script>
 </body>
 </html>
