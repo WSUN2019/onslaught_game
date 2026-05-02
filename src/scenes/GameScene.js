@@ -1,3 +1,4 @@
+import music from '../audio/MusicManager.js';
 import MapManager from '../map/MapManager.js';
 import Enemy from '../entities/Enemy.js';
 import Ogre from '../entities/Ogre.js';
@@ -13,35 +14,82 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         const g = this.make.graphics({ x: 0, y: 0, add: false });
 
-        // ── GOBLIN (40×40) ──────────────────────────────────────────────
-        g.fillStyle(0x3a8a3a);
-        g.fillTriangle(6, 14, 0, 3, 14, 16);
-        g.fillTriangle(34, 14, 26, 16, 40, 3);
-        g.fillStyle(0x4db34d);
-        g.fillCircle(20, 18, 13);
-        g.fillStyle(0x7a5010);
-        g.fillTriangle(13, 7, 11, 1, 19, 9);
-        g.fillTriangle(27, 7, 21, 9, 29, 1);
-        g.fillStyle(0xffcc00);
-        g.fillCircle(14, 15, 4);
-        g.fillCircle(26, 15, 4);
-        g.fillStyle(0xcc0000);
-        g.fillCircle(14, 15, 2.5);
-        g.fillCircle(26, 15, 2.5);
-        g.fillStyle(0xffffff);
-        g.fillCircle(13, 14, 1);
-        g.fillCircle(25, 14, 1);
-        g.fillStyle(0x3a9a3a);
-        g.fillCircle(20, 21, 3);
-        g.fillStyle(0x110000);
-        g.fillRect(12, 25, 16, 5);
-        g.fillStyle(0xeeeeee);
-        g.fillRect(13, 25, 3, 6);
-        g.fillRect(24, 25, 3, 6);
-        g.fillStyle(0x5a2e10);
-        g.fillRect(12, 29, 16, 11);
-        g.generateTexture('enemy_tex', 40, 40);
-        g.clear();
+        // ── GOBLIN animated walk (48×60, 4 frames) ─────────────────────
+        {
+            const FW = 48, FH = 60, cx = 24;
+            // Parallelogram limb: top-centre (tx,ty) → bottom-centre (bx,by), half-width h
+            const lmb = (tx, ty, bx, by, w, c) => {
+                const h = w >> 1;
+                g.fillStyle(c);
+                g.fillTriangle(tx-h, ty, tx+h, ty, bx+h, by);
+                g.fillTriangle(tx-h, ty, bx-h, by, bx+h, by);
+            };
+            // [leftLegOff, rightLegOff, leftArmOff, rightArmOff, bodyBob]
+            [[ 0, 0, 0, 0, 0],[-8, 8, 6,-6,-2],[ 0, 0, 0, 0,-1],[ 8,-8,-6, 6,-2]]
+            .forEach(([ll, rl, la, ra, b], fi) => {
+                g.clear();
+                // Right (back) leg
+                lmb(cx+6,43+b, cx+6+rl,57+b, 9, 0x2a6a2a);
+                g.fillStyle(0x241008); g.fillRect(cx+6+rl-5,55+b,12,6);
+                g.fillStyle(0x3a2018); g.fillRect(cx+6+rl-4,55+b,5,3);
+                // Right (back) arm
+                lmb(cx+10,27+b, cx+14+ra,40+b, 7, 0x3a8a3a);
+                g.fillStyle(0x4a9a4a); g.fillCircle(cx+14+ra,41+b,4);
+                // Torso shadow
+                g.fillStyle(0x4a2e10); g.fillRect(cx-11,24+b,22,21);
+                g.fillStyle(0x8a5e3c); g.fillRect(cx-10,24+b,20,20);
+                g.fillStyle(0xaa7848); g.fillRect(cx-9,25+b,9,16);   // left highlight
+                g.fillStyle(0x6a4020); g.fillRect(cx+2,25+b,7,16);   // right shadow
+                g.fillStyle(0x7a4c28); g.fillRect(cx-10,32+b,20,2);  // rib line
+                g.fillStyle(0x2c1808); g.fillRect(cx-11,38+b,22,6);  // belt
+                g.fillStyle(0xeecc44); g.fillRect(cx-3,40+b,6,3);    // buckle
+                g.fillStyle(0x6a4428); g.fillCircle(cx-10,25+b,6);   // pauldron shadow
+                g.fillStyle(0x9a7040); g.fillCircle(cx-11,24+b,5);   // pauldron highlight
+                g.fillStyle(0x6a4428); g.fillCircle(cx+10,25+b,6);
+                g.fillStyle(0x9a7040); g.fillCircle(cx+9,24+b,5);
+                // Left (front) arm
+                lmb(cx-10,27+b, cx-14+la,40+b, 7, 0x4a9a4a);
+                g.fillStyle(0x5aaa5a); g.fillCircle(cx-14+la,41+b,4);
+                g.fillStyle(0x7acc7a); g.fillCircle(cx-15+la,40+b,2);
+                // Left (front) leg
+                lmb(cx-6,43+b, cx-6+ll,57+b, 9, 0x3a8a3a);
+                g.fillStyle(0x3a2010); g.fillRect(cx-6+ll-5,55+b,12,6);
+                g.fillStyle(0x5a3828); g.fillRect(cx-6+ll-4,55+b,5,3);
+                // Head
+                const hy = 12+b;
+                g.fillStyle(0x2a5a2a); // ear shadow
+                g.fillTriangle(cx-13,hy-2, cx-17,hy+6, cx-9,hy+6);
+                g.fillTriangle(cx+13,hy-2, cx+9,hy+6, cx+17,hy+6);
+                g.fillStyle(0x4a9a4a); // ear
+                g.fillTriangle(cx-12,hy-1, cx-15,hy+5, cx-9,hy+5);
+                g.fillTriangle(cx+12,hy-1, cx+9,hy+5, cx+15,hy+5);
+                g.fillStyle(0x1a4a1a); g.fillCircle(cx,hy,14);       // head shadow ring
+                g.fillStyle(0x4db34d); g.fillCircle(cx,hy,13);       // head base
+                g.fillStyle(0x70cc70); g.fillCircle(cx-4,hy-4,7);    // highlight
+                g.fillStyle(0x88dd88); g.fillCircle(cx-5,hy-5,4);
+                g.fillStyle(0x2a7a2a, 0.45); g.fillCircle(cx+4,hy+2,8); // shadow
+                g.fillStyle(0x6a3808); // horn dark
+                g.fillTriangle(cx-5,2+b, cx-8,0+b, cx-1,8+b);
+                g.fillTriangle(cx+5,2+b, cx+1,8+b, cx+8,0+b);
+                g.fillStyle(0x8a5820); // horn highlight
+                g.fillTriangle(cx-4,3+b, cx-7,1+b, cx-2,7+b);
+                g.fillTriangle(cx+4,3+b, cx+2,7+b, cx+7,1+b);
+                g.fillStyle(0x1a5a1a); g.fillRect(cx-9,hy-5,18,5);   // brow
+                g.fillStyle(0x2a6a2a); g.fillRect(cx-8,hy-5,7,3);
+                g.fillStyle(0x111111); g.fillCircle(cx-4,hy-1,5); g.fillCircle(cx+4,hy-1,5);
+                g.fillStyle(0xffcc00); g.fillCircle(cx-4,hy-1,4); g.fillCircle(cx+4,hy-1,4);
+                g.fillStyle(0xcc2200); g.fillCircle(cx-4,hy-1,3); g.fillCircle(cx+4,hy-1,3);
+                g.fillStyle(0x111111); g.fillCircle(cx-3,hy-1,1.5); g.fillCircle(cx+5,hy-1,1.5);
+                g.fillStyle(0xffffff); g.fillCircle(cx-5,hy-2,1.2); g.fillCircle(cx+3,hy-2,1.2);
+                g.fillStyle(0x2d7a2d); g.fillCircle(cx,hy+4,3);      // nose
+                g.fillStyle(0x1d5a1d); g.fillCircle(cx-1,hy+4,1.5); g.fillCircle(cx+1,hy+4,1.5);
+                g.fillStyle(0x1a1e08); g.fillRect(cx-7,hy+6,14,6);   // mouth
+                g.fillStyle(0xeeeebb); // teeth
+                g.fillRect(cx-6,hy+6,3,5); g.fillRect(cx-2,hy+6,3,5); g.fillRect(cx+2,hy+6,3,5);
+                g.fillStyle(0xffffcc); g.fillRect(cx-8,hy+6,2,9); g.fillRect(cx+6,hy+6,2,9); // tusks
+                g.generateTexture(`goblin_${fi}`, FW, FH);
+            });
+        }
 
         // ── KNIGHT HERO (50×50) ─────────────────────────────────────────
         g.fillStyle(0x1a33aa);
@@ -102,44 +150,95 @@ export default class GameScene extends Phaser.Scene {
         g.generateTexture('tower_tex', 80, 80);
         g.clear();
 
-        // ── OGRE (64×64) ────────────────────────────────────────────────
-        // Body
-        g.fillStyle(0x6b5040);
-        g.fillCircle(32, 42, 22);
-        // Head
-        g.fillStyle(0x7a5a48);
-        g.fillCircle(32, 24, 20);
-        // Brow ridge
-        g.fillStyle(0x3a2010);
-        g.fillRect(14, 13, 36, 7);
-        // Eyes
-        g.fillStyle(0xdd2200);
-        g.fillCircle(22, 20, 5);
-        g.fillCircle(42, 20, 5);
-        g.fillStyle(0x111111);
-        g.fillCircle(22, 20, 2.5);
-        g.fillCircle(42, 20, 2.5);
-        // Nose
-        g.fillStyle(0x5a3a28);
-        g.fillRect(27, 24, 10, 7);
-        // Jaw / mouth
-        g.fillStyle(0x2a0e06);
-        g.fillRect(18, 32, 28, 10);
-        // Tusks
-        g.fillStyle(0xeeeecc);
-        g.fillTriangle(20, 32, 16, 44, 26, 44);
-        g.fillTriangle(44, 32, 38, 44, 48, 44);
-        // Left arm
-        g.fillStyle(0x6b5040);
-        g.fillRect(6, 32, 14, 10);
-        // Right arm + club
-        g.fillRect(44, 32, 14, 10);
-        g.fillStyle(0x4a2a10);
-        g.fillRect(54, 16, 8, 28);
-        g.fillStyle(0x5a3820);
-        g.fillRect(50, 10, 16, 14);
-        g.generateTexture('ogre_tex', 64, 64);
-        g.clear();
+        // ── OGRE animated walk (70×80, 4 frames) ────────────────────────
+        {
+            const FW = 70, FH = 80, cx = 35;
+            const lmb = (tx, ty, bx, by, w, c) => {
+                const h = w >> 1;
+                g.fillStyle(c);
+                g.fillTriangle(tx-h, ty, tx+h, ty, bx+h, by);
+                g.fillTriangle(tx-h, ty, bx-h, by, bx+h, by);
+            };
+            // [leftLegOff, rightLegOff, leftArmOff, clubSwing (ra), bodyBob]
+            [[0,0,0,0,0], [-12,12,8,-14,-3], [0,0,0,0,-2], [12,-12,-8,14,-3]]
+            .forEach(([ll, rl, la, ra, b], fi) => {
+                g.clear();
+                // Back leg (right)
+                lmb(cx+8, 55+b, cx+8+rl, 73+b, 14, 0x3a5020);
+                g.fillStyle(0x1a0804); g.fillRect(cx+8+rl-8, 71+b, 16, 7);
+                g.fillStyle(0x3a1808); g.fillRect(cx+8+rl-7, 71+b, 6, 4);
+                // Back arm (right) + club
+                lmb(cx+13, 37+b, cx+17+ra, 53+b, 11, 0x4a6828);
+                g.fillStyle(0x5a3010);
+                g.fillRect(cx+15+ra-3, 44+b, 6, 22);
+                g.fillStyle(0x2a1004); g.fillRect(cx+10+ra, 34+b, 16, 14);
+                g.fillStyle(0x3c1e08); g.fillRect(cx+11+ra, 35+b, 12, 10);
+                g.fillStyle(0x5a3010); g.fillRect(cx+11+ra, 35+b, 4, 4);
+                // Torso
+                g.fillStyle(0x2a4010); g.fillRect(cx-15, 33+b, 30, 24);
+                g.fillStyle(0x5a7030); g.fillRect(cx-14, 34+b, 28, 22);
+                g.fillStyle(0x7a9050); g.fillRect(cx-13, 35+b, 12, 18);
+                g.fillStyle(0x3a5020); g.fillRect(cx+2, 35+b, 10, 18);
+                g.fillStyle(0x4a6028); g.fillRect(cx-14, 42+b, 28, 2);
+                g.fillStyle(0x4a6028); g.fillRect(cx-14, 47+b, 28, 2);
+                g.fillStyle(0x2a1808); g.fillRect(cx-15, 53+b, 30, 6);
+                g.fillStyle(0xcc9920); g.fillRect(cx-4, 54+b, 8, 4);
+                g.fillStyle(0xeebb30); g.fillRect(cx-3, 55+b, 6, 2);
+                // Shoulder pads
+                g.fillStyle(0x3a5020); g.fillCircle(cx-14, 35+b, 8);
+                g.fillStyle(0x5a7030); g.fillCircle(cx-15, 34+b, 7);
+                g.fillStyle(0x3a5020); g.fillCircle(cx+14, 35+b, 8);
+                g.fillStyle(0x5a7030); g.fillCircle(cx+13, 34+b, 7);
+                // Front arm (left)
+                lmb(cx-13, 37+b, cx-17+la, 53+b, 11, 0x6a8838);
+                g.fillStyle(0x7a9848); g.fillCircle(cx-18+la, 54+b, 6);
+                g.fillStyle(0x9ac060); g.fillCircle(cx-19+la, 53+b, 3);
+                // Front leg (left)
+                lmb(cx-8, 55+b, cx-8+ll, 73+b, 14, 0x5a7030);
+                g.fillStyle(0x1a0804); g.fillRect(cx-8+ll-8, 71+b, 16, 7);
+                g.fillStyle(0x3a2010); g.fillRect(cx-8+ll-7, 71+b, 6, 4);
+                // Head
+                const hy = 18+b;
+                g.fillStyle(0x2a4010); g.fillRect(cx-10, hy+10, 20, 8);
+                g.fillStyle(0x3a5020); g.fillRect(cx-8, hy+10, 16, 6);
+                g.fillStyle(0x1a3008); g.fillCircle(cx, hy, 17);
+                g.fillStyle(0x5a7030); g.fillCircle(cx, hy, 16);
+                g.fillStyle(0x7a9050); g.fillCircle(cx-5, hy-4, 9);
+                g.fillStyle(0x8aaa60); g.fillCircle(cx-6, hy-5, 5);
+                g.fillStyle(0x3a5020, 0.5); g.fillCircle(cx+5, hy+3, 9);
+                // Ear nubs
+                g.fillStyle(0x2a4010); g.fillTriangle(cx-15, hy-4, cx-20, hy-12, cx-12, hy-12);
+                g.fillStyle(0x4a6028); g.fillTriangle(cx-14, hy-4, cx-18, hy-10, cx-12, hy-10);
+                g.fillStyle(0x2a4010); g.fillTriangle(cx+15, hy-4, cx+12, hy-12, cx+20, hy-12);
+                g.fillStyle(0x4a6028); g.fillTriangle(cx+14, hy-4, cx+12, hy-10, cx+18, hy-10);
+                // Brow
+                g.fillStyle(0x1a3008); g.fillRect(cx-13, hy-10, 26, 7);
+                g.fillStyle(0x2a4810); g.fillRect(cx-12, hy-9, 8, 4);
+                // Eyes — layered glowing red
+                g.fillStyle(0x111111); g.fillCircle(cx-5, hy-4, 6); g.fillCircle(cx+5, hy-4, 6);
+                g.fillStyle(0xff4400); g.fillCircle(cx-5, hy-4, 5); g.fillCircle(cx+5, hy-4, 5);
+                g.fillStyle(0xff8800); g.fillCircle(cx-5, hy-4, 3); g.fillCircle(cx+5, hy-4, 3);
+                g.fillStyle(0xffcc00); g.fillCircle(cx-5, hy-4, 1.5); g.fillCircle(cx+5, hy-4, 1.5);
+                g.fillStyle(0x111111); g.fillCircle(cx-4, hy-5, 1.5); g.fillCircle(cx+6, hy-5, 1.5);
+                // Nose
+                g.fillStyle(0x2a4010); g.fillRect(cx-5, hy+1, 10, 7);
+                g.fillStyle(0x3a5820); g.fillRect(cx-4, hy+2, 4, 4);
+                g.fillStyle(0x111111); g.fillCircle(cx-3, hy+5, 2); g.fillCircle(cx+3, hy+5, 2);
+                // Mouth
+                g.fillStyle(0x0a0e04); g.fillRect(cx-11, hy+7, 22, 8);
+                // Tusks
+                g.fillStyle(0xeeeebb);
+                g.fillTriangle(cx-9, hy+8, cx-13, hy+20, cx-5, hy+20);
+                g.fillTriangle(cx+9, hy+8, cx+5, hy+20, cx+13, hy+20);
+                g.fillStyle(0xccccaa);
+                g.fillTriangle(cx-8, hy+9, cx-11, hy+18, cx-7, hy+18);
+                g.fillTriangle(cx+8, hy+9, cx+7, hy+18, cx+11, hy+18);
+                // Teeth
+                g.fillStyle(0xddddb8);
+                g.fillRect(cx-10, hy+8, 4, 5); g.fillRect(cx-4, hy+8, 4, 5); g.fillRect(cx+2, hy+8, 4, 5);
+                g.generateTexture(`ogre_${fi}`, FW, FH);
+            });
+        }
 
         // ── ROCK PROJECTILE (12×12) ──────────────────────────────────────
         g.fillStyle(0x888888);
@@ -155,7 +254,10 @@ export default class GameScene extends Phaser.Scene {
     create() {
         this.cameras.main.fadeIn(400, 0, 0, 0);
 
-        this.gold = 100;
+        this.anims.create({ key: 'goblin-walk', frames: [0,1,2,3].map(i=>({key:`goblin_${i}`})), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'ogre-walk',   frames: [0,1,2,3].map(i=>({key:`ogre_${i}`})),   frameRate: 5, repeat: -1 });
+
+        this.gold = 25;
         this.lives = 20;
         this.path = MapManager.getPathPoints();
 
@@ -313,8 +415,22 @@ export default class GameScene extends Phaser.Scene {
         };
         this.input.keyboard.on('keydown-F', toggleSpeed);
         speedBtn.addEventListener('click', toggleSpeed);
-        // Clean up listener when scene shuts down
-        this.events.once('shutdown', () => speedBtn.removeEventListener('click', toggleSpeed));
+
+        // Mute button
+        const muteBtn = document.getElementById('mute-btn');
+        let muted = false;
+        const toggleMute = () => {
+            muted = !muted;
+            if (muted) { music.mute();   muteBtn.textContent = '🔇'; muteBtn.classList.add('muted'); }
+            else        { music.unmute(); muteBtn.textContent = '🔊'; muteBtn.classList.remove('muted'); }
+        };
+        muteBtn.addEventListener('click', toggleMute);
+
+        // Clean up listeners when scene shuts down
+        this.events.once('shutdown', () => {
+            speedBtn.removeEventListener('click', toggleSpeed);
+            muteBtn.removeEventListener('click', toggleMute);
+        });
 
         // Kick off wave 1
         this._startWave();
@@ -347,8 +463,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     _buildOnSlot(slot) {
-        if (this.gold < 50) {
-            this.ui.flashMessage('Not enough gold! (need 50g)');
+        if (this.gold < 5) {
+            this.ui.flashMessage('Not enough gold! (need 5g)');
             return;
         }
         slot.occupied = true;
@@ -357,7 +473,7 @@ export default class GameScene extends Phaser.Scene {
         const tower = new Tower(this, slot.x, slot.y);
         slot.tower = tower;
         this.towers.add(tower);
-        this.gold -= 50;
+        this.gold -= 5;
         this.ui.updateGold(this.gold);
     }
 
@@ -513,8 +629,8 @@ export default class GameScene extends Phaser.Scene {
         mtn.fillRect(0, 756, W, 60);
 
         // ── Rocky ledge platforms ────────────────────────────────────────
-        for (const y of MapManager.getLedgeYValues()) {
-            this._drawRockyLedge(mtn, y);
+        for (const [y, lx, lw] of MapManager.getFloorData()) {
+            this._drawRockyLedge(mtn, y, lx, lw);
         }
 
         // ── Cobblestone path + torches ───────────────────────────────────
@@ -530,8 +646,7 @@ export default class GameScene extends Phaser.Scene {
         vig.fillRect(0, 0, W, 80);
     }
 
-    _drawRockyLedge(g, y) {
-        const lx = 75, lw = 930;
+    _drawRockyLedge(g, y, lx, lw) {
         const topH = 26;    // top surface thickness
         const faceH = 60;   // cliff face height below top surface
 
@@ -624,11 +739,10 @@ export default class GameScene extends Phaser.Scene {
     }
 
     _drawCobblePath() {
-        const lx = 75, lw = 930;
         const topH = 26, faceH = 60;
         const cobble = this.add.graphics();
 
-        // Helper: fill area with 3D cobblestone brick pattern
+        // Helper: 3D cobblestone brick fill
         const cobbleRect = (rx, ry, rw, rh, sW = 28, sH = 14) => {
             cobble.fillStyle(0x22160a);
             cobble.fillRect(rx, ry, rw, rh);
@@ -639,130 +753,131 @@ export default class GameScene extends Phaser.Scene {
                     const bx = Math.max(cx, rx + 2);
                     const bw = Math.min(cx + sW, rx + rw - 2) - bx;
                     if (bw < 4) continue;
-                    cobble.fillStyle(0x7a6240);      // stone base
-                    cobble.fillRect(bx, cy, bw, sH);
-                    cobble.fillStyle(0x8c7250);      // top highlight
-                    cobble.fillRect(bx, cy, bw, 3);
-                    cobble.fillRect(bx, cy, 2, sH);
-                    cobble.fillStyle(0x584430);      // bottom shadow
-                    cobble.fillRect(bx, cy + sH - 3, bw, 3);
-                    cobble.fillRect(bx + bw - 2, cy, 2, sH);
-                    cobble.fillStyle(0x6a5438, 0.3); // worn centre
-                    cobble.fillRect(bx + 3, cy + 3, bw - 6, sH - 6);
+                    cobble.fillStyle(0x7a6240); cobble.fillRect(bx, cy, bw, sH);
+                    cobble.fillStyle(0x8c7250); cobble.fillRect(bx, cy, bw, 3); cobble.fillRect(bx, cy, 2, sH);
+                    cobble.fillStyle(0x584430); cobble.fillRect(bx, cy + sH - 3, bw, 3); cobble.fillRect(bx + bw - 2, cy, 2, sH);
+                    cobble.fillStyle(0x6a5438, 0.3); cobble.fillRect(bx + 3, cy + 3, bw - 6, sH - 6);
                 }
                 row++;
             }
         };
 
         // ── Ledge top cobblestone surfaces ───────────────────────────────
-        MapManager.getLedgeYValues().forEach(y => {
+        MapManager.getFloorData().forEach(([y, lx, lw]) => {
             cobbleRect(lx, y - topH / 2, lw, topH, 34, 12);
-            // Raised front lip
-            cobble.fillStyle(0x3a2a0e);
-            cobble.fillRect(lx, y + topH / 2 - 4, lw, 5);
-            // Rear highlight
-            cobble.fillStyle(0x6a5840, 0.35);
-            cobble.fillRect(lx, y - topH / 2, lw, 2);
+            cobble.fillStyle(0x3a2a0e); cobble.fillRect(lx, y + topH / 2 - 4, lw, 5);
+            cobble.fillStyle(0x6a5840, 0.35); cobble.fillRect(lx, y - topH / 2, lw, 2);
         });
 
-        // Phaser Graphics has no bezierCurveTo — sample the cubic manually
-        const bez = (width, color, alpha, p0x, p0y, c1x, c1y, c2x, c2y, p3x, p3y, steps = 28) => {
-            cobble.lineStyle(width, color, alpha);
-            cobble.beginPath();
-            cobble.moveTo(p0x, p0y);
-            for (let i = 1; i <= steps; i++) {
-                const t = i / steps, mt = 1 - t;
-                const x = mt*mt*mt*p0x + 3*mt*mt*t*c1x + 3*mt*t*t*c2x + t*t*t*p3x;
-                const y = mt*mt*mt*p0y + 3*mt*mt*t*c1y + 3*mt*t*t*c2y + t*t*t*p3y;
-                cobble.lineTo(x, y);
+        // ── 45° diagonal ramp helper ──────────────────────────────────────
+        // getCX(y) returns the ramp centre-x at scanline y
+        const RAMP_W = 60, HALF = 30;
+        const diagRamp = (rTopY, rBotY, getCX) => {
+            // Dark cliff fill on each side (triangle fills)
+            const cxT = getCX(rTopY), cxB = getCX(rBotY);
+            // Left triangle (from x=0 to ramp left edge)
+            cobble.fillStyle(0x16141a);
+            cobble.fillTriangle(0, rTopY, cxT - HALF, rTopY, cxB - HALF, rBotY);
+            cobble.fillTriangle(0, rTopY, cxB - HALF, rBotY, 0, rBotY);
+            // Right triangle (from ramp right edge to x=1080)
+            cobble.fillTriangle(cxT + HALF, rTopY, 1080, rTopY, 1080, rBotY);
+            cobble.fillTriangle(cxT + HALF, rTopY, 1080, rBotY, cxB + HALF, rBotY);
+            // Subtle stone texture on walls
+            cobble.fillStyle(0x20202e, 0.5);
+            cobble.fillTriangle(0, rTopY, cxT - HALF, rTopY, cxB - HALF, rTopY + Math.round((rBotY - rTopY) * 0.3));
+            cobble.fillTriangle(0, rTopY, cxB - HALF, rTopY + Math.round((rBotY - rTopY) * 0.3), 0, rTopY + Math.round((rBotY - rTopY) * 0.3));
+
+            // Cobblestone bricks — horizontal slices shifted per scanline for 45° look
+            const BRICK_H = 12, MORTAR = 2;
+            for (let ry = rTopY; ry <= rBotY; ry += BRICK_H + MORTAR) {
+                const cx = Math.round(getCX(ry));
+                const bh = Math.min(BRICK_H, rBotY - ry);
+                cobble.fillStyle(0x22160a); cobble.fillRect(cx - HALF, ry, RAMP_W, bh + MORTAR);
+                cobble.fillStyle(0x7a6240); cobble.fillRect(cx - HALF, ry, RAMP_W, bh);
+                cobble.fillStyle(0x8c7250); cobble.fillRect(cx - HALF, ry, RAMP_W, 3); cobble.fillRect(cx - HALF, ry, 2, bh);
+                cobble.fillStyle(0x584430); cobble.fillRect(cx - HALF, ry + bh - 3, RAMP_W, 3); cobble.fillRect(cx + HALF - 2, ry, 2, bh);
+                cobble.fillStyle(0x6a5438, 0.3); cobble.fillRect(cx - HALF + 3, ry + 3, RAMP_W - 6, bh - 6);
             }
-            cobble.strokePath();
+
+            // Raised edge lips (diagonal) — draw per-scanline for smooth diagonal line
+            for (let ry = rTopY; ry <= rBotY; ry++) {
+                const cx = Math.round(getCX(ry));
+                cobble.fillStyle(0x3a2a0e); cobble.fillRect(cx - HALF - 4, ry, 4, 1);
+                cobble.fillStyle(0x3a2a0e); cobble.fillRect(cx + HALF, ry, 4, 1);
+                cobble.fillStyle(0x000000, 0.4); cobble.fillRect(cx - HALF, ry, 5, 1);
+                cobble.fillStyle(0x000000, 0.4); cobble.fillRect(cx + HALF - 5, ry, 5, 1);
+            }
+
+            // Arch gate at top opening
+            const cxTop = Math.round(getCX(rTopY));
+            const cxBot = Math.round(getCX(rBotY));
+            for (const [gx, gy] of [[cxTop - HALF - 16, rTopY], [cxBot - HALF - 16, rBotY]]) {
+                cobble.fillStyle(0x2a2818); cobble.fillRect(gx, gy - 38, 16, 38); cobble.fillRect(gx + RAMP_W + 16, gy - 38, 16, 38);
+                cobble.fillStyle(0x1e1c10); cobble.fillRect(gx, gy - 44, RAMP_W + 48, 8);
+                cobble.fillStyle(0x3a3416); cobble.fillRect(gx, gy - 44, RAMP_W + 48, 3);
+                cobble.fillStyle(0x4a4422); cobble.fillRect(gx + HALF + 8, gy - 52, 20, 9);
+            }
         };
 
-        // ── Right connector — U-curve bulging RIGHT ───────────────────────
-        // Center bezier: (930,rcBot) → C1=(1030,rcBot) → C2=(1030,rcTop) → (930,rcTop)
-        // Edges offset ±38px in x on each control point for parallel approximation
-        const rcTop = Math.round(500 + topH / 2);   // 513
-        const rcBot = Math.round(850 - topH / 2);   // 837
-        const rcCX = 1030;   // control-point x (sets bulge distance)
+        // RIGHT RAMP: 45° up-right  cx = 1690 - y  (at y=860→cx=830, at y=610→cx=1080)
+        const rRT = 610 + Math.round(topH / 2);   // 623
+        const rRB = 860 - Math.round(topH / 2);   // 847
+        diagRamp(rRT, rRB, y => 1690 - y);
 
-        // Drop shadow (cliff-drop side, right)
-        bez(18, 0x000000, 0.45,  968, rcBot, rcCX+38, rcBot, rcCX+38, rcTop,  968, rcTop);
-        // Dark mortar base
-        bez(84, 0x1c1408, 1,     930, rcBot, rcCX,    rcBot, rcCX,    rcTop,  930, rcTop);
-        // Stone surface
-        bez(74, 0x7a6240, 1,     930, rcBot, rcCX,    rcBot, rcCX,    rcTop,  930, rcTop);
-        // Worn centre highlight
-        bez(22, 0x8c7452, 0.38,  930, rcBot, rcCX,    rcBot, rcCX,    rcTop,  930, rcTop);
-        // Inner edge line (left / mountain side)
-        bez(3,  0x1c1408, 0.9,   892, rcBot, rcCX-38, rcBot, rcCX-38, rcTop,  892, rcTop);
-        // Outer edge line (right / cliff side)
-        bez(3,  0x1c1408, 0.9,   968, rcBot, rcCX+38, rcBot, rcCX+38, rcTop,  968, rcTop);
-        // Retaining wall (mountain side, slightly left of inner edge)
-        bez(16, 0x1e1e30, 1,     878, rcBot, rcCX-52, rcBot, rcCX-52, rcTop,  878, rcTop);
-        bez(12, 0x28283e, 1,     878, rcBot, rcCX-52, rcBot, rcCX-52, rcTop,  878, rcTop);
+        // LEFT RAMP: 45° up-left  cx = y - 360  (at y=610→cx=250, at y=360→cx=0)
+        const lRT = 360 + Math.round(topH / 2);   // 373
+        const lRB = 610 - Math.round(topH / 2);   // 597
+        diagRamp(lRT, lRB, y => y - 360);
 
-        // ── Left connector — U-curve bulging LEFT ─────────────────────────
-        // Center bezier: (150,lcBot) → C1=(50,lcBot) → C2=(50,lcTop) → (150,lcTop)
-        const lcTop = Math.round(150 + topH / 2);   // 163
-        const lcBot = Math.round(500 - topH / 2);   // 487
-        const lcCX = 50;    // control-point x
+        // ── Wall torches ──────────────────────────────────────────────────
+        const torchBrackets = this.add.graphics();
+        const torchPositions = [];
 
-        // Drop shadow (cliff-drop side, left)
-        bez(18, 0x000000, 0.45,  112, lcBot, lcCX-38, lcBot, lcCX-38, lcTop,  112, lcTop);
-        // Dark mortar base
-        bez(84, 0x1c1408, 1,     150, lcBot, lcCX,    lcBot, lcCX,    lcTop,  150, lcTop);
-        // Stone surface
-        bez(74, 0x7a6240, 1,     150, lcBot, lcCX,    lcBot, lcCX,    lcTop,  150, lcTop);
-        // Worn centre highlight
-        bez(22, 0x8c7452, 0.38,  150, lcBot, lcCX,    lcBot, lcCX,    lcTop,  150, lcTop);
-        // Inner edge line (right / mountain side)
-        bez(3,  0x1c1408, 0.9,   188, lcBot, lcCX+38, lcBot, lcCX+38, lcTop,  188, lcTop);
-        // Outer edge line (left / cliff side)
-        bez(3,  0x1c1408, 0.9,   112, lcBot, lcCX-38, lcBot, lcCX-38, lcTop,  112, lcTop);
-        // Retaining wall (mountain side, slightly right of inner edge)
-        bez(16, 0x1e1e30, 1,     202, lcBot, lcCX+52, lcBot, lcCX+52, lcTop,  202, lcTop);
-        bez(12, 0x28283e, 1,     202, lcBot, lcCX+52, lcBot, lcCX+52, lcTop,  202, lcTop);
-
-        // ── Wall torches along each ledge ────────────────────────────────
-        const torch = this.add.graphics();
         const torchAt = (tx, ty) => {
-            // Warm glow halos
-            torch.fillStyle(0xff7700, 0.06); torch.fillCircle(tx, ty - 34, 72);
-            torch.fillStyle(0xff5500, 0.07); torch.fillCircle(tx, ty - 34, 42);
-            torch.fillStyle(0xff9900, 0.04); torch.fillCircle(tx, ty - 34, 100);
-            // Pole
-            torch.fillStyle(0x4a2e0a);
-            torch.fillRect(tx - 3, ty - 40, 6, 28);
-            // Bracket arm
-            torch.fillStyle(0x3a2008);
-            torch.fillRect(tx - 9, ty - 42, 20, 5);
-            torch.fillRect(tx + 9, ty - 50, 3, 10);
-            // Bracket detail
-            torch.fillStyle(0x2a1404);
-            torch.fillRect(tx - 8, ty - 42, 2, 5);
-            torch.fillRect(tx + 16, ty - 50, 2, 10);
-            // Flame — outer orange
-            torch.fillStyle(0xcc4400, 0.95);
-            torch.fillTriangle(tx - 7, ty - 50, tx + 7, ty - 50, tx, ty - 66);
-            // Flame — mid amber
-            torch.fillStyle(0xff7700, 0.9);
-            torch.fillTriangle(tx - 5, ty - 50, tx + 5, ty - 50, tx + 1, ty - 64);
-            // Flame — inner yellow
-            torch.fillStyle(0xffcc00, 0.85);
-            torch.fillTriangle(tx - 3, ty - 50, tx + 3, ty - 50, tx, ty - 60);
-            // Flame core
-            torch.fillStyle(0xffffff, 0.45); torch.fillCircle(tx, ty - 56, 3);
+            torchPositions.push({ tx, ty });
+            torchBrackets.fillStyle(0x4a2e0a); torchBrackets.fillRect(tx - 3, ty - 40, 6, 28);
+            torchBrackets.fillStyle(0x3a2008); torchBrackets.fillRect(tx - 9, ty - 42, 20, 5); torchBrackets.fillRect(tx + 9, ty - 50, 3, 10);
+            torchBrackets.fillStyle(0x2a1404); torchBrackets.fillRect(tx - 8, ty - 42, 2, 5); torchBrackets.fillRect(tx + 16, ty - 50, 2, 10);
         };
 
-        // Torches between slot positions (at x=205, 410, 665, 865 per ledge)
-        [850, 500, 150].forEach(y => {
-            [200, 415, 668, 862].forEach(x => torchAt(x, y));
+        // Ledge torches (spaced across each floor's x-range)
+        MapManager.getFloorData().forEach(([y, lx, lw]) => {
+            [0.2, 0.4, 0.6, 0.8].forEach(f => torchAt(Math.round(lx + lw * f), y));
         });
+
+        // Ramp torches (on wall beside each diagonal ramp)
+        [0.25, 0.55, 0.82].forEach(f => {
+            const ry = Math.round(rRT + f * (rRB - rRT));
+            torchAt(Math.round(1690 - ry) - HALF - 28, ry);
+        });
+        [0.25, 0.55, 0.82].forEach(f => {
+            const ry = Math.round(lRT + f * (lRB - lRT));
+            torchAt(Math.round(ry - 360) + HALF + 28, ry);
+        });
+
+        // Animated flame layer drawn on top of brackets
+        const torchFlames = this.add.graphics();
+        let _torchT = 0;
+        const drawFlames = () => {
+            _torchT += 0.06;
+            torchFlames.clear();
+            for (const { tx, ty } of torchPositions) {
+                const seed = tx * 0.13 + ty * 0.07;
+                const lean = Math.sin(_torchT * 4.1 + seed) * 2.5;
+                const tipY = ty - 66 + Math.sin(_torchT * 3.7 + seed + 1) * 4;
+
+                torchFlames.fillStyle(0xcc4400, 0.95); torchFlames.fillTriangle(tx - 7, ty - 50, tx + 7, ty - 50, tx + lean,           tipY);
+                torchFlames.fillStyle(0xff7700, 0.9);  torchFlames.fillTriangle(tx - 5, ty - 50, tx + 5, ty - 50, tx + 1 + lean * 0.7, tipY + 2);
+                torchFlames.fillStyle(0xffcc00, 0.85); torchFlames.fillTriangle(tx - 3, ty - 50, tx + 3, ty - 50, tx + lean * 0.4,     tipY + 6);
+                torchFlames.fillStyle(0xffffff, 0.45); torchFlames.fillCircle(tx + lean * 0.3, ty - 56, 3);
+            }
+        };
+        drawFlames();
+        this.time.addEvent({ delay: 60, callback: drawFlames, loop: true });
     }
 
     _waveConfig(wave) {
-        const goblins   = 80 + (wave - 1) * 10;
+        const goblins   = 40 + (wave - 1) * 5;
         const ogres     = Math.floor(2 + (wave - 1) * 1.5);
         const total     = goblins + ogres;
         const speedMult = Math.min(3.5, 1 + (wave - 1) * 0.15);

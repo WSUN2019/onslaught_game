@@ -1,6 +1,6 @@
 export default class Ogre extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, path, speedMult = 1, hpMult = 1) {
-        super(scene, x, y, 'ogre_tex');
+        super(scene, x, y, 'ogre_0');
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -10,7 +10,7 @@ export default class Ogre extends Phaser.Physics.Arcade.Sprite {
         this.hp = Math.ceil(300 * hpMult);
         this.maxHp = this.hp;
         this.setOrigin(0.5);
-        this.setScale(1.4);   // visually bigger on screen
+        this.play('ogre-walk');
 
         this.hpBar = scene.add.graphics();
         this.on('destroy', () => { if (this.hpBar) this.hpBar.destroy(); });
@@ -39,7 +39,7 @@ export default class Ogre extends Phaser.Physics.Arcade.Sprite {
     _drawHPBar() {
         const bw = 64, bh = 8;
         const bx = this.x - bw / 2;
-        const by = this.y - 52;
+        const by = this.y - 48;
         const ratio = Math.max(0, this.hp / this.maxHp);
         const col = ratio > 0.5 ? 0x22dd22 : ratio > 0.25 ? 0xddcc00 : 0xdd2222;
 
@@ -72,7 +72,7 @@ export default class Ogre extends Phaser.Physics.Arcade.Sprite {
             duration: 400,
             ease: 'Back.easeIn',
             onComplete: () => {
-                this.scene.events.emit('enemy-killed', 40, 'ogre');
+                this.scene.events.emit('enemy-killed', 4, 'ogre');
                 this.destroy();
             }
         });

@@ -10,11 +10,11 @@ export default class UIManager {
     }
 
     updateGold(gold) {
-        if (this.goldEl) this.goldEl.innerHTML = `<span class="icon">🪙</span> ${gold}`;
+        if (this.goldEl) this.goldEl.textContent = `🪙 ${gold}`;
     }
 
     updateLives(lives) {
-        if (this.livesEl) this.livesEl.innerHTML = `<span class="icon">♥</span> ${lives}`;
+        if (this.livesEl) this.livesEl.textContent = `♥ ${lives}`;
     }
 
     updateTowerCount(built, total) {
@@ -22,7 +22,7 @@ export default class UIManager {
     }
 
     updateWave(wave, total) {
-        if (this.waveEl) this.waveEl.textContent = `Wave: ${wave}  (${total} monsters)`;
+        if (this.waveEl) this.waveEl.textContent = `⚔ Wave: ${wave}  (${total})`;
     }
 
     updateScore(score) {

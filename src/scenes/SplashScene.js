@@ -1,9 +1,14 @@
+import music from '../audio/MusicManager.js';
+
 export default class SplashScene extends Phaser.Scene {
     constructor() {
         super('SplashScene');
     }
 
     create() {
+        // Start music immediately — AudioContext resumes on first user gesture
+        music.start();
+
         const W = 1080, H = 960;
         const g = this.add.graphics();
 

@@ -1,6 +1,6 @@
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, path, speedMult = 1, hpMult = 1) {
-        super(scene, x, y, 'enemy_tex');
+        super(scene, x, y, 'goblin_0');
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -10,6 +10,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.hp = Math.ceil(30 * hpMult);
         this.maxHp = this.hp;
         this.setOrigin(0.5);
+        this.play('goblin-walk');
 
         // HP bar drawn on top of sprite (added after so it renders above)
         this.hpBar = scene.add.graphics();
@@ -39,7 +40,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     _drawHPBar() {
         const bw = 44, bh = 6;
         const bx = this.x - bw / 2;
-        const by = this.y - 32;
+        const by = this.y - 42;
         const ratio = Math.max(0, this.hp / this.maxHp);
         const col = ratio > 0.5 ? 0x22dd22 : ratio > 0.25 ? 0xddcc00 : 0xdd2222;
 
@@ -74,7 +75,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
             duration: 280,
             ease: 'Back.easeIn',
             onComplete: () => {
-                this.scene.events.emit('enemy-killed', 8, 'goblin');
+                this.scene.events.emit('enemy-killed', 1, 'goblin');
                 this.destroy();
             }
         });

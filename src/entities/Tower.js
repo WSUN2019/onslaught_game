@@ -3,10 +3,10 @@ import Projectile from './Projectile.js';
 // Stats indexed by level 1-5
 const LEVELS = [
     null,                                          // 0 (unused)
-    { damage: 10, fireRate: 800, range: 200, tint: 0xffffff, upgradeCost: 75  },
-    { damage: 16, fireRate: 680, range: 215, tint: 0xaaffaa, upgradeCost: 100 },
-    { damage: 25, fireRate: 540, range: 230, tint: 0x88aaff, upgradeCost: 150 },
-    { damage: 38, fireRate: 400, range: 248, tint: 0xffdd44, upgradeCost: 200 },
+    { damage: 10, fireRate: 800, range: 200, tint: 0xffffff, upgradeCost: 8  },
+    { damage: 16, fireRate: 680, range: 215, tint: 0xaaffaa, upgradeCost: 10 },
+    { damage: 25, fireRate: 540, range: 230, tint: 0x88aaff, upgradeCost: 15 },
+    { damage: 38, fireRate: 400, range: 248, tint: 0xffdd44, upgradeCost: 20 },
     { damage: 55, fireRate: 280, range: 268, tint: 0xff6644, upgradeCost: null }, // max
 ];
 
@@ -19,14 +19,13 @@ export default class Tower extends Phaser.GameObjects.Container {
 
         this.nextFire = 0;
 
-        this.rangeCircle = scene.add.circle(0, 0, this.range, 0xffaa22, 0.07);
         this.sprite = scene.add.image(0, 0, 'tower_tex');
         this.label = scene.add.text(0, -52, 'Lv.1', {
             fontSize: '22px', color: '#ffffff',
             fontStyle: 'bold', stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        this.add([this.rangeCircle, this.sprite, this.label]);
+        this.add([this.sprite, this.label]);
         scene.add.existing(this);
     }
 
@@ -47,7 +46,6 @@ export default class Tower extends Phaser.GameObjects.Container {
 
         const s = LEVELS[this.towerLevel];
         this.sprite.setTint(s.tint);
-        this.rangeCircle.setRadius(this.range);
         this.label.setText(`Lv.${this.towerLevel}`);
 
         // Flash upgrade text
